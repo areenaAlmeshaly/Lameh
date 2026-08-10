@@ -1,6 +1,6 @@
 import pandas as pd 
 
-def Data_sammary(df):
+def data_sammary(df):
 
     memory =df.memory_usage(deep=True).sum()
     rows, columns = df.shape
@@ -14,6 +14,7 @@ def Data_sammary(df):
     types = df.dtypes
     unique = df.nunique()
     nonnull=df.notnull().sum()
+
     summary = pd.DataFrame({"Types":types,
     "unique":unique ,
     "non-null":nonnull})
@@ -21,8 +22,18 @@ def Data_sammary(df):
     Duplicates=df.duplicated().sum()
     DuplicatePerc=(Duplicates/rows)*100
 
-    Data_Quality={
-        "Duplicates":DuplicatePerc
-    }
+    data_quality={
+        "Duplicates num":Duplicates,
+        "Duplicates percent":DuplicatePerc,}
 
-    return dataSize,summary,Data_Quality
+
+    null=df.isnull().sum() 
+    null=null[null>0]  
+    nullperc=(null/rows)*100
+     
+    missing_values=pd.DataFrame({
+    "null num":null,
+    "null perc": nullperc
+    })
+
+    return dataSize,summary,data_quality,missing_values
