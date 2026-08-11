@@ -1,13 +1,16 @@
 import pandas as pd 
 
-def data_sammary(df):
+def data_summary(df):
 
     memory =df.memory_usage(deep=True).sum()
-    rows, columns = df.shape
+    rows_num, columns_num = df.shape
 
-    dataSize={
-        "Columns":columns,
-        "Rows":rows,
+    if rows_num <50:
+        print("Warning ! : Your DataSet is too small for ML")
+
+    data_Size={
+        "Columns":columns_num,
+        "Rows":rows_num,
         "memory":memory
     }
 
@@ -15,25 +18,25 @@ def data_sammary(df):
     unique = df.nunique()
     nonnull=df.notnull().sum()
 
-    summary = pd.DataFrame({"Types":types,
+    columns_Info = pd.DataFrame({"Types":types,
     "unique":unique ,
     "non-null":nonnull})
 
-    Duplicates=df.duplicated().sum()
-    DuplicatePerc=(Duplicates/rows)*100
+    duplicates_num=df.duplicated().sum()
+    duplicate_Perc=(duplicates_num/rows_num)*100
 
-    data_quality={
-        "Duplicates num":Duplicates,
-        "Duplicates percent":DuplicatePerc,}
+    duplicates={
+        "Duplicates num":duplicates_num,
+        "Duplicates percent":duplicate_Perc,}
 
 
-    null=df.isnull().sum() 
-    null=null[null>0]  
-    nullperc=(null/rows)*100
+    null_num=df.isnull().sum() 
+    only_null_col=null_num[null_num>0]  
+    null_perc=(null_num/rows_num)*100
      
     missing_values=pd.DataFrame({
-    "null num":null,
-    "null perc": nullperc
+    "null num":only_null_col,
+    "null perc": null_perc,
     })
 
-    return dataSize,summary,data_quality,missing_values
+    return data_Size,columns_Info,duplicates,missing_values
