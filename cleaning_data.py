@@ -1,0 +1,9 @@
+import pandas as pd 
+def turning_categ(df,review):
+  for item in review:
+            if item["reason"] == "Numeric column with few unique values - may be categorical":
+                 column = item["column"]
+                 dec=input(print("Is",column ,"a categorical column ? (YES)(NO) "))
+                 if dec=="YES" and df[column].dtype != "object":
+                      df[column] = df[column].astype("object")
+  return df.dtypes

@@ -6,12 +6,17 @@ def detect_numeric(df):
         column=df[i]
         converted = pd.to_numeric(column, errors="coerce")
         numeric_ratio = converted.notna().sum()/column.notna().sum()
-        if numeric_ratio!=0:
-            info[i]=numeric_ratio
 
-            if numeric_ratio>=0.95:
-                df[i] = converted
-    return info,df.dtypes
+        n_unique = column.nunique()
+        unique_ratio = n_unique / column.notna().sum()
+
+        if numeric_ratio>=0.95:
+                info[i]={
+                    "numericـratio" : numeric_ratio,
+                   "n_unique" :n_unique,
+                    "unique_ratio" : unique_ratio
+                }
+    return info
 
 
 def detect_date(df):
@@ -24,16 +29,44 @@ def detect_date(df):
             if date_ratio!=0:
                 info[i]=date_ratio
                 if date_ratio>=0.95:
-                    df[i] = converted            
-    return info,df.dtypes
+                    df[i] = converted     
 
-def detect_categoral(df):
-    info={} 
-    for i in df.columns:
-            column=df[i]
-            if column.dtype=="object":
-                values_ratio=(column.value_counts()/column.count())
-                for value in values_ratio.index:
-                    if values_ratio[value] <= 0.1:
-                        info[i] = values_ratio[value]
     return info
+ 
+
+def classify_columns(df,info):
+    review = []
+    for i in df.columns:
+         if i in info:
+              numeric_ratio = info[i]["numericـratio"]
+              unique_ratio = info[i]["unique_ratio"]
+              n_unique=info[i]["n_unique"]
+
+              if numeric_ratio < 1.0:
+                  review.append({
+        "column": i,
+        "reason": "Not fully numeric"})
+
+              elif n_unique <= 5:
+
+                review.append({
+                    "column": i,
+                    "reason": "Numeric column with few unique values - may be categorical"}) 
+                
+              elif unique_ratio >= 0.95:
+                  review.append({
+        "column": i,
+        "reason": "High unique ratio - possible identifier"})
+              else:
+                  df[i] = pd.to_numeric(df[i], errors="coerce")
+
+                   
+         elif df[i].dtype == "object":
+              
+              unique_ratio = df[i].nunique() / df[i].notna().sum()
+              if unique_ratio >= 0.95:
+
+                review.append({"column": i,
+                                   "reason":"High unique ratio - possible identifier"})  
+    return review
+             
