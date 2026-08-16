@@ -3,8 +3,8 @@ def turning_categ(df,review):
   for item in review:
             if item["reason"] == "Numeric column with few unique values - may be categorical":
                  column = item["column"]
-                 dec=input(f"Is {column} a categorical column ? (yes)(no)")
-                 if dec.lower()=="yes" and df[column].dtype != "object":
+                 dec=input(f"Is {column} a categorical column ? (y/n)")
+                 if dec.lower()=="y" and df[column].dtype != "object":
                       df[column] = df[column].astype("object")
   return df
 
@@ -13,10 +13,10 @@ def is_ID(df,review):
   for item in review:
             if item["reason"] == "High unique ratio - possible identifier":
                  column = item["column"]
-                 dec=input(f"Is {column} an ID column ? (yes)(no) ")
-                 if dec.lower()=="yes" and df[column].dtype != "object":
+                 dec=input(f"Is {column} an ID column ? (y/n) ")
+                 if dec.lower()=="y" and df[column].dtype != "object":
                       df[column] = df[column].astype("object")
-                      ID.append(column)
+                 ID.append(column)
   return ID
 
 def not_full_num(df,review):
@@ -31,8 +31,16 @@ def not_full_num(df,review):
                        df[column] = converted
      return df
 
-def drop_dupl(df):
-    return df.drop_duplicates(keep="first")
+def duplicate_val(df):
+    duplicates_num = df.duplicated().sum()
+    if duplicates_num > 0:
+        print("Found", duplicates_num, "duplicate rows.")
+
+        dec = input("Do you want to drop them? (y/n) ")
+
+        if dec.lower() == "y":
+            df = df.drop_duplicates(keep="first")
+    return df
 
 def null_val(df,missing_values):
      deal_cols=[]
@@ -50,4 +58,46 @@ def null_val(df,missing_values):
                 elif dec.lower() == "deal":    
                             deal_cols.append(col)
      return deal_cols,df
-                
+
+
+def null_deal(df,deal_cols,missing_values):
+    for i in deal_cols:
+     per=missing_values.loc[i, "null perc"]
+     column=df[i]
+     if column.dtype != "object":
+        skew = column.skew()
+
+        if abs(skew)<0.5:
+           reco="mean"
+
+        elif abs(skew)>0.5:
+           reco="median"
+
+        dec=input(f"{i} has {per} missing values.\n" f"Recommended method: {reco} \n" f"skew is {skew} \n""Do you want to use it ? (y/n) ")
+        if dec.lower()=="y":
+               if reco=="mean":
+                    column= column.fillna(column.mean())
+               else:
+                    column= column.fillna(column.median())
+
+        elif dec.lower()=="n":
+              dec2=input("would you like to\n""1- keep it as null\n""2-use median?\n")
+
+              if dec2==2:
+                 if reco=="mean":
+                      column= column.fillna(column.median())
+                 else:
+                      column= column.fillna(column.mean())
+
+     elif column.dtype == "object" :
+        top_ratio =column.value_counts(normalize=True).iloc[0]
+        cate=column.value_counts(normalize=True).index[0]
+        dec=input(f"No dominant category was detected for {i} column.\n""What would you like to do?\n""1. Leave missing values\n""2. Fill with mode anywayn")
+
+        if top_ratio >= 0.5:
+           print(f"{i} has {per} missing values.\n" f"most Category is {cate}.\n" f"with {top_ratio}% ratio" f"Recommended method: mode \n" "Do you want to use it ? (y/n)")
+           column= column.fillna(column.mode()[0])
+
+        elif dec:
+             if dec==2:
+                  column= column.fillna(column.mode()[0])

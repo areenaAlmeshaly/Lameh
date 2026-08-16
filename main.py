@@ -10,6 +10,8 @@ from cleaning_data import turning_categ
 from cleaning_data import is_ID
 from cleaning_data import not_full_num
 from cleaning_data import null_val
+from cleaning_data import duplicate_val
+from cleaning_data import null_deal
 
 file_path = input("Enter your file path: ")
 df=load_file(file_path)
@@ -30,3 +32,5 @@ df=not_full_num(df,review)
 print("----------------------")
 deal_cols,df=null_val(df,missing_values)
 print(df.dtypes)
+df=duplicate_val(df)
+df=null_deal(df,deal_cols,missing_values)
