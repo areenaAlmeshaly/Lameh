@@ -37,7 +37,6 @@ def detect_date(df):
 
 def classify_columns(df,info,date_info):
     review = []
-    ambiguous = []
     numric_col=[]
     cat_col=[]
     for i in df.columns:
@@ -78,11 +77,5 @@ def classify_columns(df,info,date_info):
                                    "reason":"High unique ratio - possible identifier"})  
               else:
                   cat_col.append(i)
-    
-         else:
 
-                ambiguous.append({
-                    "column": i,
-                    "reason":"Object column - ambiguous for automatic EDA"})
-    
-    return df,review,numric_col,cat_col,ambiguous
+    return df,review,numric_col,cat_col

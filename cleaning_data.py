@@ -76,11 +76,11 @@ def null_val(df,missing_values):
                 if perc>=50:
                       print(f"WARNING : missing values in {col} To high to drop it ! ")
 
-                dec=input(f"what do you want to do with null values in {col} it has a percent {perc}% drop OR Deal with it ?")
-                if dec.lower()=="drop":
+                dec=input(f"what do you want to do with null values in {col} it has a percent {perc}% 1-Drop 2-Deal (1/2) ?")
+                if dec==1:
                   df = df.dropna(subset=[col])
 
-                elif dec.lower() == "deal":    
+                elif dec==2:    
                             deal_cols.append(col)
      return deal_cols,df
 
@@ -101,18 +101,18 @@ def null_deal(df,deal_cols,missing_values):
         dec=input(f"{i} has {per} missing values.\n" f"Recommended method: {reco} \n" f"skew is {skew} \n""Do you want to use it ? (y/n) ")
         if dec.lower()=="y":
                if reco=="mean":
-                    column= column.fillna(column.mean())
+                    df[i]= column.fillna(column.mean())
                else:
-                    column= column.fillna(column.median())
+                    df[i]= column.fillna(column.median())
 
         elif dec.lower()=="n":
               dec2=input("would you like to\n""1- keep it as null\n""2-use median?\n")
 
               if dec2==2:
                  if reco=="mean":
-                      column= column.fillna(column.median())
+                      df[i]= column.fillna(column.median())
                  else:
-                      column= column.fillna(column.mean())
+                      df[i]= column.fillna(column.mean())
 
      elif column.dtype == "object" :
         top_ratio =column.value_counts(normalize=True).iloc[0]
@@ -121,11 +121,11 @@ def null_deal(df,deal_cols,missing_values):
 
         if top_ratio >= 0.5:
            print(f"{i} has {per} missing values.\n" f"most Category is {cate}.\n" f"with {top_ratio}% ratio" f"Recommended method: mode \n" "Do you want to use it ? (y/n)")
-           column= column.fillna(column.mode()[0])
+           df[i]= column.fillna(column.mode()[0])
 
         elif dec:
              if dec==2:
-                  column= column.fillna(column.mode()[0])
+                  df[i]= column.fillna(column.mode()[0])
     return df
 
 

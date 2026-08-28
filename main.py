@@ -1,7 +1,6 @@
 #.  /Users/areena/Desktop/HR_Attrition_Project/IBM Data.csv
 #  /Users/areena/Desktop/dirty_cafe_sales.csv
 # /Users/areena/Desktop/marketing_campaign.csv
-import pandas as pd
 from file_loader import load_file
 from data_overview import data_summary
 from schema_detection import detect_numeric, detect_date, classify_columns
@@ -16,34 +15,33 @@ from cleaning_data import(
     outliers)
 from EDA import descr, num_vizual, num_rela, cat_vizual
 
-file_path = input("Enter your file path: ")
-df=load_file(file_path)
+def main():
+    file_path = input("Enter your file path: ")
+    df = load_file(file_path)
+    data_size,columns_info,duplicates,missing_values = data_summary(df)
 
-data_size, columns_Info, duplicates, missing_values = data_summary(df)
-print(data_summary(df))
-info=detect_numeric(df)
-date_info=detect_date(df)
+    info=detect_numeric(df)
+    date_info=detect_date(df)
 
+    df,review,numeric_col,cat_col=classify_columns(df,info,date_info)
+    df, numeric_col,cat_col=turning_categ(df,review,numeric_col,cat_col)
 
-df,review,numric_col,cat_col,ambiguous=classify_columns(df,info,date_info)
-print("----------------------")
+    df=turning_date(df,review)
+    ID=is_ID(review)
 
-df,numric_col,cat_col=turning_categ(df,review,numric_col,cat_col)
-df=turning_date(df, review)
-print("----------------------")
-ID=(is_ID(review))
-print("----------------------")
-df,numric_col=not_full_num(df,review,numric_col)
+    df,numeric_col=not_full_num(df,review,numeric_col)
 
-print("----------------------")
-deal_cols,df=null_val(df,missing_values)
-print(df.dtypes)
-df=duplicate_val(df)
-df=null_deal(df,deal_cols,missing_values)
-df=outliers(df)
-#drop
+    deal_cols,df=null_val(df,missing_values)
 
-print(descr(df,ID))
-print(num_vizual(df,numric_col))
-print(num_rela(df,numric_col))
-print(cat_vizual(df,cat_col))
+    df=duplicate_val(df)
+
+    df=null_deal(df,deal_cols,missing_values)
+
+    df = outliers(df)
+    descr(df, ID)
+    num_vizual(df, numeric_col)
+    num_rela(df, numeric_col)
+    cat_vizual(df, cat_col)
+
+if __name__ == "__main__":
+    main()
