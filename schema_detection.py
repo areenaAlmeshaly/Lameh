@@ -20,25 +20,33 @@ def detect_numeric(df):
 
 
 def detect_date(df):
-    info={} 
+    date_info = {}
     for i in df.columns:
-        column=df[i]
-        if column.dtype=="object":
-            converted = pd.to_datetime(column, errors="coerce", format="mixed")
-            date_ratio = converted.notna().sum()/column.notna().sum()
-            if date_ratio!=0:
-                info[i]=date_ratio
-                if date_ratio>=0.95:
-                    df[i] = converted     
-
-    return info
+        column = df[i]
+        if column.dtype == "object":
+            converted = pd.to_datetime(
+                column,
+                errors="coerce",
+                format="mixed")
+            date_ratio = converted.notna().sum() / column.notna().sum()
+            if date_ratio >= 0.95:
+                date_info[i] = {
+                    "date_ratio": date_ratio}
+    return date_info
  
 
-def classify_columns(df,info):
+def classify_columns(df,info,date_info):
     review = []
     ambiguous = []
+    numric_col=[]
+    cat_col=[]
     for i in df.columns:
-         if i in info:
+         if i in date_info:
+             review.append({
+        "column": i,
+        "reason": "May be date"
+    })
+         elif i in info:
               numeric_ratio = info[i]["numericـratio"]
               unique_ratio = info[i]["unique_ratio"]
               n_unique=info[i]["n_unique"]
@@ -48,8 +56,7 @@ def classify_columns(df,info):
         "column": i,
         "reason": "Not fully numeric"})
 
-              elif n_unique <= 5:
-
+              elif n_unique <= 10:
                 review.append({
                     "column": i,
                     "reason": "Numeric column with few unique values - may be categorical"}) 
@@ -59,6 +66,7 @@ def classify_columns(df,info):
         "column": i,
         "reason": "High unique ratio - possible identifier"})
               else:
+                  numric_col.append(i)
                   df[i] = pd.to_numeric(df[i], errors="coerce")
 
                    
@@ -66,14 +74,15 @@ def classify_columns(df,info):
               
               unique_ratio = df[i].nunique() / df[i].notna().sum()
               if unique_ratio >= 0.95:
-
                 review.append({"column": i,
                                    "reason":"High unique ratio - possible identifier"})  
-
+              else:
+                  cat_col.append(i)
+    
          else:
 
                 ambiguous.append({
                     "column": i,
                     "reason":"Object column - ambiguous for automatic EDA"})
-    return review
-             
+    
+    return df,review,numric_col,cat_col,ambiguous

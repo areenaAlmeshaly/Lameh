@@ -6,7 +6,7 @@ def data_summary(df):
     rows_num, columns_num = df.shape
 
     if rows_num <50:
-        print("Warning ! : Your DataSet is too small for ML")
+        print("Warning ! : Your DataSet is small")
 
     data_Size={
         "Columns":columns_num,
@@ -32,11 +32,15 @@ def data_summary(df):
 
     null_num=df.isnull().sum() 
     only_null_col=null_num[null_num>0]  
-    null_perc=(null_num/rows_num)*100
-     
-    missing_values=pd.DataFrame({
+    null_perc=(only_null_col/rows_num)*100
+
+    if not only_null_col.empty:
+       
+       missing_values=pd.DataFrame({
     "null num":only_null_col,
     "null perc": null_perc,
     })
-
+    else :
+        missing_values = pd.DataFrame(columns=["null num", "null perc"])
+        
     return data_Size,columns_Info,duplicates,missing_values

@@ -1,27 +1,47 @@
 import pandas as pd 
-def turning_categ(df,review):
-  for item in review:
+def turning_categ(df,review,numric_col,cat_col):
+     for item in review:
             if item["reason"] == "Numeric column with few unique values - may be categorical":
                  column = item["column"]
                  dec=input(f"Is {column} a categorical column ? (y/n)")
-                 if dec.lower()=="y" and df[column].dtype != "object":
+                 if dec.lower() == "y":
                       df[column] = df[column].astype("object")
-  return df
+                      cat_col.append(column)
+                 elif dec.lower() == "n":
+                      numric_col.append(column)
 
+     return df,numric_col,cat_col
 
-def is_ID(df,review):
+def turning_date(df, review):
+    for item in review:
+        if item["reason"] == "May be date":
+            column = item["column"]
+            converted = pd.to_datetime(
+                df[column],
+                errors="coerce",
+                format="mixed")
+            dec = input(
+                f"Is {column} a date column? (y/n) ")
+            if dec.lower() == "y":
+                df[column] = converted
+
+            elif dec.lower() == "n":
+                pass
+    return df
+
+def is_ID(review):
   ID = []
   for item in review:
             if item["reason"] == "High unique ratio - possible identifier":
                  column = item["column"]
                  dec=input(f"Is {column} an ID column ? (y/n) ")
-                 if dec.lower()=="y" and df[column].dtype != "object":
-                      df[column] = df[column].astype("object")
-                 ID.append(column)
+                 if dec.lower()=="y":
+                      ID.append(column)
+                      
   return ID
 
 
-def not_full_num(df,review):
+def not_full_num(df,review,numric_col):
      for item in review:
                   if item["reason"] == "Not fully numeric":
                        column = item["column"]
@@ -31,7 +51,8 @@ def not_full_num(df,review):
                        print("Invalid values:")
                        print(invalid_values)
                        df[column] = converted
-     return df
+                       numric_col.append(column)
+     return df,numric_col
 
 
 def duplicate_val(df):
@@ -109,42 +130,6 @@ def null_deal(df,deal_cols,missing_values):
 
 
 
-"""def outliers(df):
-     for i in df.columns:
-          column=df[i]
-          if not pd.api.types.is_numeric_dtype(column):
-            continue
-
-          med=column.median()
-          q1=column.quantile(0.25)
-          q3=column.quantile(0.75)
-          iqr=q3-q1
-          lower_inner=q1-1.5 *iqr
-          upper_inner=q3+1.5*iqr
-          lower_outer = q1 - 3 * iqr
-          upper_outer = q3 + 3 * iqr
-
-          mild_outliers=column[((column<lower_inner)&(column>=lower_outer))|((column>upper_inner)&(column<=upper_outer))]
-          extreme_outliers=column[(column<lower_outer)|(column>upper_outer)]
-          non_null = column.notna().sum()
-          mild_outliers_per=(mild_outliers/non_null)*100
-
-
-          if len(mild_outliers) > 0 or len(extreme_outliers) > 0:
-               dec=input(f"column {i} \n"f"Q1={q1} \n"f"median={med}\n"f"Q3={q3}\n"
-                         f"IQR={iqr}\n"f"Potential outliers :{mild_outliers_per}%\n"
-                         f"Extreme outliers ({len(extreme_outliers)}): {extreme_outliers.tolist()}\n""These values are statistically unusual \n"
-                         "An extreme outlier is not automatically an error.\n""Do you want to:\n""1. Keep\n""2. Remove \n")
-               if dec=="2":
-                    dec2=input("Would you like to remove\n" "1.Extreme potential outlier\n""2.Potential outliers\n""3.ALL\n")
-                    if dec2 =="1":
-                         df.drop(index=extreme_outliers.index)
-                    elif dec2=="2":
-                         df.drop(index=mild_outliers.index)
-                    elif dec2=="3":
-                         df.drop(index=mild_outliers.index)&df.drop(index=extreme_outliers.index)
-     return df"""
-
 def outliers(df):
      for i in df.columns:
           column=df[i]
@@ -169,7 +154,7 @@ def outliers(df):
 
           if non_null > 0:
                mild_outliers_per=(mild_outliers_num/non_null)*100
-
+               extreme_outliers_per=(extreme_outliers_num/non_null)*100
           if len(mild_outliers) > 0 or len(extreme_outliers) > 0:
 
                if len(extreme_outliers) == 0:
@@ -186,7 +171,8 @@ def outliers(df):
                     dec=input(f"column {i} \n"f"Q1={q1} \n"f"median={med}\n"f"Q3={q3}\n"
                               f"IQR={iqr}\n"f"Potential outliers ({mild_outliers_num}): {mild_outliers_per:.2f}%\n"
                               f"Potential outlier range: {mild_outliers.min()} - {mild_outliers.max()}\n"
-                              f"Extreme outliers ({extreme_outliers_num}): {extreme_outliers.tolist()}\n"
+                              f"Extreme outliers ({extreme_outliers_num}): {mild_outliers_per:.2f}%\n"
+                              f"Extreme outliers range {extreme_outliers.min()} - {extreme_outliers.max()}\n"
                               "These values are statistically unusual.\n"
                               "An extreme outlier is not automatically an error.\n"
                               "Do you want to:\n""1. Keep\n""2. Remove \n")
