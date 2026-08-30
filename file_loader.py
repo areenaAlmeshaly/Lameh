@@ -9,4 +9,4 @@ def load_file(file_path):
     if extension in readers:
         return(readers[extension](file_path))
     else:
-        print("the file extiontion is invalid")
+        raise ValueError(f"Unsupported file extension: {extension}")

@@ -12,7 +12,7 @@ def detect_numeric(df):
 
         if numeric_ratio>=0.95:
                 info[i]={
-                    "numericـratio" : numeric_ratio,
+                    "numeric_ratio" : numeric_ratio,
                    "n_unique" :n_unique,
                     "unique_ratio" : unique_ratio
                 }
@@ -46,7 +46,7 @@ def classify_columns(df,info,date_info):
         "reason": "May be date"
     })
          elif i in info:
-              numeric_ratio = info[i]["numericـratio"]
+              numeric_ratio = info[i]["numeric_ratio"]
               unique_ratio = info[i]["unique_ratio"]
               n_unique=info[i]["n_unique"]
 
@@ -70,12 +70,12 @@ def classify_columns(df,info,date_info):
 
                    
          elif df[i].dtype == "object":
-              
-              unique_ratio = df[i].nunique() / df[i].notna().sum()
-              if unique_ratio >= 0.95:
-                review.append({"column": i,
-                                   "reason":"High unique ratio - possible identifier"})  
-              else:
-                  cat_col.append(i)
+             n_unique = df[i].nunique()
+             if n_unique == 1:
+                 continue
+             elif n_unique > 20:
+                 continue
+             else:
+                 cat_col.append(i)
 
     return df,review,numric_col,cat_col

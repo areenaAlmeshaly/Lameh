@@ -1,9 +1,9 @@
 import pandas as pd 
-def turning_categ(df,review,numric_col,cat_col):
+def turning_categ(df,review,numric_col,cat_col,decisions):
      for item in review:
             if item["reason"] == "Numeric column with few unique values - may be categorical":
                  column = item["column"]
-                 dec=input(f"Is {column} a categorical column ? (y/n)")
+                 dec = decisions.get(column)
                  if dec.lower() == "y":
                       df[column] = df[column].astype("object")
                       cat_col.append(column)
@@ -12,29 +12,25 @@ def turning_categ(df,review,numric_col,cat_col):
 
      return df,numric_col,cat_col
 
-def turning_date(df, review):
+def turning_date(df, review,decisions):
     for item in review:
-        if item["reason"] == "May be date":
+        if item["reason"]=="Might be date":
             column = item["column"]
-            converted = pd.to_datetime(
+            converted=pd.to_datetime(
                 df[column],
                 errors="coerce",
                 format="mixed")
-            dec = input(
-                f"Is {column} a date column? (y/n) ")
+            dec=decisions.get(column)
             if dec.lower() == "y":
-                df[column] = converted
-
-            elif dec.lower() == "n":
-                pass
+                df[column]=converted
     return df
 
-def is_ID(review):
+def is_ID(review,decisions):
   ID = []
   for item in review:
             if item["reason"] == "High unique ratio - possible identifier":
                  column = item["column"]
-                 dec=input(f"Is {column} an ID column ? (y/n) ")
+                 dec = decisions.get(column)
                  if dec.lower()=="y":
                       ID.append(column)
                       
@@ -55,136 +51,93 @@ def not_full_num(df,review,numric_col):
      return df,numric_col
 
 
-def duplicate_val(df):
+def duplicate_val(df,decisions):
     duplicates_num = df.duplicated().sum()
     if duplicates_num > 0:
-        print("Found", duplicates_num, "duplicate rows.")
-
-        dec = input("Do you want to drop them? (y/n) ")
-
-        if dec.lower() == "y":
+        if decisions.lower() == "y":
             df = df.drop_duplicates(keep="first")
     return df
 
 
-def null_val(df,missing_values):
+def null_val(df,missing_values,decisions):
      deal_cols=[]
      for col in missing_values.index:
           perc = missing_values.loc[col, "null perc"]
 
           if perc>0:
-                if perc>=50:
-                      print(f"WARNING : missing values in {col} To high to drop it ! ")
-
-                dec=input(f"what do you want to do with null values in {col} it has a percent {perc}% 1-Drop 2-Deal (1/2) ?")
-                if dec==1:
-                  df = df.dropna(subset=[col])
-
-                elif dec==2:    
+                 dec = decisions.get(col)
+                 if dec == "drop":
+                       df = df.dropna(subset=[col])
+                 elif dec== "deal":
                             deal_cols.append(col)
      return deal_cols,df
 
 
-def null_deal(df,deal_cols,missing_values):
-    for i in deal_cols:
-     per=missing_values.loc[i, "null perc"]
-     column=df[i]
-     if column.dtype != "object":
-        skew = column.skew()
+def null_deal(df,deal_cols,missing_values,decisions):
+     for column_name in deal_cols:
+        column = df[column_name]
+        decision = decisions.get(column_name)
 
-        if abs(skew)<0.5:
-           reco="mean"
+        if pd.api.types.is_numeric_dtype(column):
+            if decision=="mean":
+                df[column_name]=column.fillna(column.mean())
+            elif decision=="median":
+                df[column_name] = column.fillna(column.median())
+            elif decision=="keep":
+                pass
+        elif pd.api.types.is_object_dtype(column):
+                 if decision == "mode":
+                      df[column_name] = column.fillna(column.mode()[0])
 
-        elif abs(skew)>0.5:
-           reco="median"
-
-        dec=input(f"{i} has {per} missing values.\n" f"Recommended method: {reco} \n" f"skew is {skew} \n""Do you want to use it ? (y/n) ")
-        if dec.lower()=="y":
-               if reco=="mean":
-                    df[i]= column.fillna(column.mean())
-               else:
-                    df[i]= column.fillna(column.median())
-
-        elif dec.lower()=="n":
-              dec2=input("would you like to\n""1- keep it as null\n""2-use median?\n")
-
-              if dec2==2:
-                 if reco=="mean":
-                      df[i]= column.fillna(column.median())
-                 else:
-                      df[i]= column.fillna(column.mean())
-
-     elif column.dtype == "object" :
-        top_ratio =column.value_counts(normalize=True).iloc[0]
-        cate=column.value_counts(normalize=True).index[0]
-        dec=input(f"No dominant category was detected for {i} column.\n""Mode imputation is not recommended." "What would you like to do?\n""1. Leave missing values\n""2. Fill with mode anywayn")
-
-        if top_ratio >= 0.5:
-           print(f"{i} has {per} missing values.\n" f"most Category is {cate}.\n" f"with {top_ratio}% ratio" f"Recommended method: mode \n" "Do you want to use it ? (y/n)")
-           df[i]= column.fillna(column.mode()[0])
-
-        elif dec:
-             if dec==2:
-                  df[i]= column.fillna(column.mode()[0])
-    return df
-
-
-
-def outliers(df):
-     for i in df.columns:
-          column=df[i]
-          if not pd.api.types.is_numeric_dtype(column):
-            continue
-
-          med=column.median()
-          q1=column.quantile(0.25)
-          q3=column.quantile(0.75)
-          iqr=q3-q1
-          lower_inner=q1-1.5 *iqr
-          upper_inner=q3+1.5*iqr
-          lower_outer = q1 - 3 * iqr
-          upper_outer = q3 + 3 * iqr
-
-          mild_outliers=column[((column<lower_inner)&(column>=lower_outer))|((column>upper_inner)&(column<=upper_outer))]
-          extreme_outliers=column[(column<lower_outer)|(column>upper_outer)]
-          non_null = column.notna().sum()
-
-          mild_outliers_num=len(mild_outliers)
-          extreme_outliers_num=len(extreme_outliers)
-
-          if non_null > 0:
-               mild_outliers_per=(mild_outliers_num/non_null)*100
-               extreme_outliers_per=(extreme_outliers_num/non_null)*100
-          if len(mild_outliers) > 0 or len(extreme_outliers) > 0:
-
-               if len(extreme_outliers) == 0:
-                    dec=input(f"column {i} \n"f"Q1={q1} \n"f"median={med}\n"f"Q3={q3}\n"
-                              f"IQR={iqr}\n"f"Potential outliers ({mild_outliers_num}): {mild_outliers_per:.2f}%\n"
-                              f"Potential outlier range: {mild_outliers.min()} - {mild_outliers.max()}\n"
-                              "These values are statistically unusual, but they are not necessarily a data problem.\n"
-                              "Do you want to:\n""1. Keep\n""2. Remove \n")
-
-                    if dec=="2":
-                         df=df.drop(index=mild_outliers.index)
-
-               else:
-                    dec=input(f"column {i} \n"f"Q1={q1} \n"f"median={med}\n"f"Q3={q3}\n"
-                              f"IQR={iqr}\n"f"Potential outliers ({mild_outliers_num}): {mild_outliers_per:.2f}%\n"
-                              f"Potential outlier range: {mild_outliers.min()} - {mild_outliers.max()}\n"
-                              f"Extreme outliers ({extreme_outliers_num}): {mild_outliers_per:.2f}%\n"
-                              f"Extreme outliers range {extreme_outliers.min()} - {extreme_outliers.max()}\n"
-                              "These values are statistically unusual.\n"
-                              "An extreme outlier is not automatically an error.\n"
-                              "Do you want to:\n""1. Keep\n""2. Remove \n")
-
-                    if dec=="2":
-                         dec2=input("Would you like to remove\n" "1.Extreme potential outlier\n""2.Potential outliers\n""3.ALL\n")
-
-                         if dec2 =="1":
-                              df=df.drop(index=extreme_outliers.index)
-                         elif dec2=="2":
-                              df=df.drop(index=mild_outliers.index)
-                         elif dec2=="3":
-                              df=df.drop(index=mild_outliers.index.union(extreme_outliers.index))
-
+                 elif decision == "keep":
+                      pass
      return df
+
+
+
+def outliers(df, decisions):
+    outlier_info = {}
+    for i in df.columns:
+        column = df[i]
+
+        if not pd.api.types.is_numeric_dtype(column):
+            continue
+        q1=column.quantile(0.25)
+        q3=column.quantile(0.75)
+        iqr=q3 - q1
+
+        lower_inner=q1-1.5*iqr
+        upper_inner=q3+1.5*iqr
+
+        lower_outer=q1-3*iqr
+        upper_outer=q3+3*iqr
+
+        mild_outliers=column[
+            ((column<lower_inner)&(column>=lower_outer))|
+            ((column>upper_inner)&(column<=upper_outer))]
+
+        extreme_outliers = column[(column < lower_outer)|(column > upper_outer)]
+        non_null = column.notna().sum()
+
+        mild_percent = (len(mild_outliers) / non_null) * 100
+        extreme_percent = (len(extreme_outliers) / non_null) * 100
+
+        if len(mild_outliers) > 0 or len(extreme_outliers) > 0:
+            outlier_info[i]={
+                "mild_range": (lower_inner, upper_inner),
+                "mild_percent": mild_percent,
+                "extreme_range": (lower_outer, upper_outer),
+                "extreme_percent": extreme_percent}
+
+            dec = decisions.get(i)
+            if dec == "mild":
+                df = df.drop(index=mild_outliers.index)
+
+            elif dec == "extreme":
+                df = df.drop(index=extreme_outliers.index)
+
+            elif dec=="all":
+                df=df.drop(
+                    index=mild_outliers.index.union(extreme_outliers.index))
+
+    return df, outlier_info

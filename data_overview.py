@@ -5,8 +5,7 @@ def data_summary(df):
     memory =df.memory_usage(deep=True).sum()
     rows_num, columns_num = df.shape
 
-    if rows_num <50:
-        print("Warning ! : Your DataSet is small")
+    small_warning = rows_num < 50
 
     data_Size={
         "Columns":columns_num,
@@ -43,4 +42,4 @@ def data_summary(df):
     else :
         missing_values = pd.DataFrame(columns=["null num", "null perc"])
         
-    return data_Size,columns_Info,duplicates,missing_values
+    return data_Size,columns_Info,duplicates,missing_values,small_warning
