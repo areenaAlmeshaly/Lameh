@@ -2,153 +2,107 @@
 
 ### Dataset Assessment & Exploratory Analysis
 
-Lamah is a Python-based application for the initial assessment and exploration of tabular datasets.
+Lameh is a Python-based application for assessing and exploring tabular datasets.
 
-It provides a structured workflow for examining dataset structure, reviewing ambiguous column types, identifying common data-quality issues, applying user-selected treatments, and exploring statistical patterns.
-
-The result is a processed dataset that can be exported for further analysis, together with a clearer understanding of the dataset and where further analysis may begin.
+It brings together dataset profiling, schema detection, data treatment, and exploratory analysis into a guided workflow. The application helps users examine their dataset, review potentially ambiguous columns, handle common data issues, and explore basic statistical patterns before continuing with further analysis.
 
 > **Understand the data first. Then decide where to take the analysis.**
 
 ---
 
-## Why I Built It
-
-A large part of data analysis begins with the same questions:
-
-* What does this dataset look like?
-* What do the variables represent?
-* Are there quality issues that need attention?
-* Which columns require further interpretation?
-* What patterns are already visible?
-
-I wanted to turn these initial steps into a coherent workflow rather than keep them as disconnected operations inside a notebook.
-
-Lamah brings together Python, Pandas, statistical reasoning, and exploratory analysis into a practical application that takes a dataset from **initial assessment to a processed and explored state**.
-
-The purpose is not to remove analytical judgment, but to make the first stage of working with a dataset more structured and deliberate.
-
----
-
-## How It Works
-
-Lamah follows a sequential workflow in which each stage builds on the decisions and information established earlier.
+## Workflow
 
 ```text
 Upload
   ↓
 Dataset Overview
   ↓
-Schema Detection
+Schema Detection & Review
   ↓
-Schema Review
+Duplicates
   ↓
-Duplicate Assessment
+Missing Values
   ↓
-Missing Value Assessment & Treatment
-  ↓
-Outlier Assessment
+Outliers
   ↓
 Exploratory Analysis
   ↓
 Processed Dataset
 ```
 
----
-
-## How to Use
-
-1. **Upload a dataset** through the application.
-2. **Review the dataset overview**, including its dimensions, columns, data types, missing values, and duplicates.
-3. **Review detected schema cases** where a column may have an ambiguous type or role.
-4. **Confirm or change the classification** of columns that require user interpretation.
-5. **Review duplicate records** and decide whether they should be removed.
-6. **Review missing values** and select how they should be treated.
-7. **Review potential outliers** identified through the IQR method.
-8. **Continue to exploratory analysis** to examine the resulting dataset.
-9. **Export the processed dataset** and use it for further analysis outside Lamah.
-
-The workflow is guided, but the treatment decisions remain with the user.
-
----
-
-## What It Covers
+## Features
 
 ### Dataset Overview
 
-Lamah begins by profiling the dataset through:
+Lameh provides an initial profile of the dataset, including:
 
-* Dataset dimensions
-* Column structure and data types
-* Unique and non-null values
-* Missing values
-* Duplicate records
+* Number of rows and columns
 * Memory usage
+* Data types
+* Unique and non-null values
+* Duplicate records
+* Missing values and percentages
+* A warning for datasets with fewer than 50 rows
 
-This provides an initial view of the dataset before treatment decisions are made.
+### Schema Detection
 
-### Schema Detection & Review
+The application examines column values to identify potentially ambiguous cases, including:
 
-The application uses characteristics of the underlying values to flag potentially ambiguous columns, including:
-
+* Numeric columns
 * Date-like columns
-* Numeric columns with low cardinality that may represent categories
+* Numeric columns with few unique values that may represent categories
 * Columns that are not fully numeric
 * High-uniqueness columns that may represent identifiers
 
-Detection is not treated as infallible. When a column requires interpretation, Lamah asks the user to review it rather than silently assuming its role.
+Ambiguous cases are presented for user review rather than automatically assigning a single interpretation.
 
-### Data Quality & Treatment
+### Data Treatment
 
-Lamah identifies duplicate records and missing values and allows the user to decide how they should be handled.
+Users can decide how identified issues should be handled.
 
-Depending on the selected treatment, the application applies the decision to the working dataset. The resulting processed dataset can then be exported.
+The application supports:
 
-### Outlier Assessment
+* Converting values to numeric
+* Converting columns to categorical or date types
+* Identifying possible identifier columns
+* Removing duplicate records
+* Handling missing values using deletion, mean, median, mode, or keeping them
+* Assessing and removing selected outliers
 
-Potential outliers are assessed using the IQR rule.
+### Outlier Detection
 
-The application distinguishes between observations beyond:
+Numerical columns are assessed using the IQR method.
 
-* `1.5 × IQR`
-* `3 × IQR`
+Lameh distinguishes between:
 
-An unusual observation is not automatically considered an error. Outlier detection is used to make potentially important observations visible for further consideration.
+* **Mild outliers:** between `1.5 × IQR` and `3 × IQR`
+* **Extreme outliers:** beyond `3 × IQR`
+
+Users can choose whether to remove mild outliers, extreme outliers, or both.
 
 ### Exploratory Analysis
 
-The EDA stage provides statistical and visual summaries including:
+The EDA stage provides:
 
 * Descriptive statistics
-* Numerical distributions
-* Categorical frequencies
-* Relationships between numerical variables
-* Correlations
-* Summary observations from the available analysis
+* Histograms for numerical variables
+* Frequency bar charts for categorical variables
+* Correlation heatmap for numerical variables
+* Automatically generated observations based on the available data
 
-The purpose of this stage is to provide an initial view of the data and help identify where deeper analysis may be useful.
-
----
+The generated observations currently focus on strong numerical relationships, strong skewness, and highly concentrated categorical variables.
 
 ## Design Approach
 
-A central design decision in Lamah is the balance between **rule-based automation and human judgment**.
+Lameh uses explicit rules and user decisions throughout the workflow.
 
-Some characteristics can be reasonably inferred from the values in a dataset. Others depend on the meaning of a variable and cannot be reliably determined from its values alone.
+Column characteristics can provide useful signals, but they do not always determine the meaning of a variable. For example, a numeric column with a small number of unique values could represent either a numerical variable or a categorical code.
 
-For example, a column containing values such as `1, 2, 3, 4, 5` is technically numeric, but those values could represent measurements, ratings, codes, or categories.
+For these cases, Lameh surfaces the case for review instead of forcing an interpretation.
 
-Rather than forcing a single interpretation, Lamah can flag such cases for review.
-
-The same principle is applied to data treatment: the application surfaces issues and provides treatment options, while the user decides what should happen to the data.
-
-This makes Lamah a **guided analytical support tool**, rather than a black-box cleaning system.
-
----
+The same approach is used for data treatment: the application identifies issues and provides treatment options, while the user decides what should be applied.
 
 ## Implementation
-
-The application separates the Streamlit interface and workflow from the main analytical components.
 
 ```text
 Analyzer-proj/
@@ -165,114 +119,55 @@ Analyzer-proj/
 ### Core Modules
 
 **`app.py`**
-Controls the Streamlit interface, workflow stages, session state, and user decisions.
+Streamlit application interface and workflow.
 
 **`file_loader.py`**
-Handles dataset loading.
+Loads CSV, XLSX, and JSON datasets.
 
 **`data_overview.py`**
-Generates the initial dataset summary, including dimensions, column information, duplicates, missing values, and related checks.
+Generates dataset dimensions, column information, duplicates, missing-value information, memory usage, and the small-dataset warning.
 
 **`schema_detection.py`**
-Contains the logic used to detect numeric and date-like columns and classify potentially ambiguous column roles.
+Contains numeric detection, date detection, and column classification logic.
 
 **`cleaning_data.py`**
-Contains data-conversion logic, identifier checks, duplicate handling, missing-value handling, and outlier processing.
+Handles column conversion, identifier selection, duplicate removal, missing-value treatment, and outlier processing.
 
 **`EDA.py`**
-Contains descriptive analysis, visualizations, and generated observations.
-
-The analytical behavior is implemented through explicit Python rules, Pandas operations, and statistical methods.
-
----
+Contains descriptive statistics, numerical and categorical visualizations, correlation analysis, and generated observations.
 
 ## Limitations
 
-Lamah currently relies on explicit rules and heuristics. Its results therefore depend on how the input data is structured and represented, as well as on the assumptions encoded in those rules.
+Lameh currently relies on explicit rules and thresholds. The interpretation of a column can depend on the context and meaning of the underlying data, so detected classifications should be reviewed by the user.
 
-Some datasets may require manual interpretation or produce classifications and recommendations that are not appropriate for their specific context.
+Similarly, outliers and missing values are not automatically treated as errors. Their appropriate treatment depends on the dataset and analysis context.
 
-This is particularly relevant to:
-
-* Schema detection
-* Missing-value treatment
-* Identifier detection
-* Outlier assessment
-* Automated summary observations
-
-These limitations are part of the current implementation and are important to consider when interpreting the results.
-
-Lamah is intended to provide a **structured first look and direction for further analysis**, not a definitive interpretation of every dataset.
-
----
+The generated observations are based on a limited set of statistical conditions and are intended as an initial summary rather than a complete interpretation of the dataset.
 
 ## Tech Stack
 
-* **Python**
-* **Pandas**
-* **Matplotlib**
-* **Seaborn**
-* **Streamlit**
-
----
+**Python · Pandas · Matplotlib · Seaborn · Streamlit**
 
 ## Running Locally
-
-Clone the repository and install the required dependencies:
 
 ```bash
 git clone <repository-url>
 cd Analyzer-proj
 pip install -r requirements.txt
-```
-
-Run the Streamlit application:
-
-```bash
 streamlit run app.py
 ```
 
-The application will open in your browser.
+## Scope
 
-> If the repository does not currently contain a `requirements.txt`, add one before using these installation instructions.
+Lameh focuses on the **initial assessment and exploration of tabular data**.
 
----
-
-## Project Scope
-
-Lamah focuses on the **initial stage of data analysis**:
-
-```text
-Dataset
-   ↓
-Understand
-   ↓
-Assess
-   ↓
-Make treatment decisions
-   ↓
-Process
-   ↓
-Explore
-   ↓
-Identify direction for further analysis
-```
-
-It is not intended to replace domain knowledge or determine the complete analytical approach for a dataset.
-
-Its role is to reduce the friction between **receiving a dataset and knowing how to begin working with it**.
-
----
+It is intended to help users move from receiving a dataset to understanding its basic structure, addressing selected data issues, and identifying initial statistical patterns that can guide further analysis.
 
 ## Author
 
 **Areena Almeshaly**
 Statistics & AI Student
 
-[Email](mailto:areena1020@gmail.com) · [LinkedIn](https://www.linkedin.com/in/areena-almeshaly)
-
 ---
 
-### Disclaimer
-
-Lamah is an analytical support tool. Its results depend on the input data and the rules implemented in the current version and should be interpreted in the context of the data, domain knowledge, and purpose of the analysis.
+**Disclaimer:** Lameh is an analytical support tool. Its results depend on the input data and the rules implemented in the current version and should be interpreted in the context of the data and the purpose of the analysis.
