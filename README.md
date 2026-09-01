@@ -1,4 +1,4 @@
-# Lamah
+# Lameh
 
 ### Dataset Assessment & Exploratory Analysis
 
