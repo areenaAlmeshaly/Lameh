@@ -2,6 +2,8 @@
 
 ### Dataset Assessment & Exploratory Analysis
 
+🚀 **[Live Demo — Try Lameh](https://areenaalmeshaly-analyzer-proj-app-o1idh6.streamlit.app)**
+
 Lameh is a Python-based application for assessing and exploring tabular datasets.
 
 It brings together dataset profiling, schema detection, data treatment, and exploratory analysis into a guided workflow. The application helps users examine their dataset, review potentially ambiguous columns, handle common data issues, and explore basic statistical patterns before continuing with further analysis.
@@ -102,39 +104,104 @@ For these cases, Lameh surfaces the case for review instead of forcing an interp
 
 The same approach is used for data treatment: the application identifies issues and provides treatment options, while the user decides what should be applied.
 
-## Implementation
+## Project Structure
 
 ```text
 Analyzer-proj/
 │
 ├── app.py
-├── file_loader.py
-├── data_overview.py
-├── schema_detection.py
-├── cleaning_data.py
-├── EDA.py
-└── README.md
+├── requirements.txt
+├── README.md
+├── .gitignore
+│
+└── src/
+    ├── file_loader.py
+    ├── data_overview.py
+    ├── schema_detection.py
+    ├── cleaning_data.py
+    └── EDA.py
 ```
 
 ### Core Modules
 
 **`app.py`**
+
 Streamlit application interface and workflow.
 
-**`file_loader.py`**
+**`src/file_loader.py`**
+
 Loads CSV, XLSX, and JSON datasets.
 
-**`data_overview.py`**
+**`src/data_overview.py`**
+
 Generates dataset dimensions, column information, duplicates, missing-value information, memory usage, and the small-dataset warning.
 
-**`schema_detection.py`**
+**`src/schema_detection.py`**
+
 Contains numeric detection, date detection, and column classification logic.
 
-**`cleaning_data.py`**
+**`src/cleaning_data.py`**
+
 Handles column conversion, identifier selection, duplicate removal, missing-value treatment, and outlier processing.
 
-**`EDA.py`**
+**`src/EDA.py`**
+
 Contains descriptive statistics, numerical and categorical visualizations, correlation analysis, and generated observations.
+
+## Installation & Local Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd Analyzer-proj
+```
+
+### 2. Create a Virtual Environment
+
+Creating a virtual environment keeps the project's dependencies isolated from other Python projects.
+
+```bash
+python3 -m venv .venv
+```
+
+Activate it on macOS/Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+### 3. Install Dependencies
+
+Install the libraries required by Lameh:
+
+```bash
+pip install -r requirements.txt
+```
+
+The dependencies include:
+
+* Streamlit
+* Pandas
+* Matplotlib
+* Seaborn
+* OpenPyXL
+
+### 4. Run the Application
+
+Start Lameh locally with:
+
+```bash
+streamlit run app.py
+```
+
+The application will open in your browser through the local Streamlit server.
+
+## Live Demo
+
+Lameh is deployed with Streamlit and can be used directly without local installation.
+
+🚀 **[Open Lameh](https://areenaalmeshaly-analyzer-proj-app-o1idh6.streamlit.app)**
 
 ## Limitations
 
@@ -148,15 +215,6 @@ The generated observations are based on a limited set of statistical conditions 
 
 **Python · Pandas · Matplotlib · Seaborn · Streamlit**
 
-## Running Locally
-
-```bash
-git clone <repository-url>
-cd Analyzer-proj
-pip install -r requirements.txt
-streamlit run app.py
-```
-
 ## Scope
 
 Lameh focuses on the **initial assessment and exploration of tabular data**.
@@ -166,6 +224,7 @@ It is intended to help users move from receiving a dataset to understanding its 
 ## Author
 
 **Areena Almeshaly**
+
 Statistics & AI Student
 
 ---
