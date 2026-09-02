@@ -124,6 +124,7 @@ def outliers(df, decisions):
 
         if len(mild_outliers) > 0 or len(extreme_outliers) > 0:
             outlier_info[i]={
+                 "q1": q1,"q3": q3,"iqr": iqr,
                 "mild_range": (lower_inner, upper_inner),
                 "mild_percent": mild_percent,
                 "extreme_range": (lower_outer, upper_outer),

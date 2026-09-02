@@ -1520,21 +1520,24 @@ elif current_stage == "upload":
 
                 st.session_state.columns_to_treat = []
 
-            st.html(
-                f"""
-                <div class="info">
+                file_size_mb = uploaded_file.size / (1024 ** 2)
 
-                    <strong>
-                        {uploaded_file.name}
-                    </strong>
+                st.html(
+    f"""
+    <div class="info">
 
-                    loaded successfully —
-                    {len(df):,} rows ×
-                    {len(df.columns):,} columns.
+        <strong>
+            {uploaded_file.name}
+        </strong>
 
-                </div>
-                """
-            )
+        loaded successfully —
+        {len(df):,} rows ×
+        {len(df.columns):,} columns —
+        {file_size_mb:.2f} MB.
+
+    </div>
+    """
+)
 
             st.html(
                 f"""

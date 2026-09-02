@@ -4,6 +4,11 @@ def detect_numeric(df):
     info={}
     for i in df.columns:
         column=df[i]
+
+        non_null = column.notna().sum()
+        if non_null == 0:
+            continue
+
         converted = pd.to_numeric(column, errors="coerce")
         numeric_ratio = converted.notna().sum()/column.notna().sum()
 
@@ -23,15 +28,19 @@ def detect_date(df):
     date_info = {}
     for i in df.columns:
         column = df[i]
-        if column.dtype == "object":
+
+        non_null = column.notna().sum()
+        if non_null == 0:
+                    continue
+        
+        if not pd.api.types.is_numeric_dtype(column):
             converted = pd.to_datetime(
                 column,
                 errors="coerce",
                 format="mixed")
             date_ratio = converted.notna().sum() / column.notna().sum()
             if date_ratio >= 0.95:
-                date_info[i] = {
-                    "date_ratio": date_ratio}
+                date_info[i] = {"date_ratio": date_ratio}
     return date_info
  
 
@@ -43,7 +52,7 @@ def classify_columns(df,info,date_info):
          if i in date_info:
              review.append({
         "column": i,
-        "reason": "May be date"
+        "reason": "Might be date"
     })
          elif i in info:
               numeric_ratio = info[i]["numeric_ratio"]
