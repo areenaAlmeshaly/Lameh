@@ -4,11 +4,11 @@ import tempfile
 import pandas as pd
 import streamlit as st
 
-from file_loader import load_file
-from data_overview import data_summary
-from schema_detection import detect_numeric, detect_date, classify_columns
+from src.file_loader import load_file
+from src.data_overview import data_summary
+from src.schema_detection import detect_numeric, detect_date, classify_columns
 
-from cleaning_data import (
+from src.cleaning_data import (
     turning_categ,
     turning_date,
     is_ID,
@@ -19,7 +19,7 @@ from cleaning_data import (
     outliers,
 )
 
-from EDA import (
+from src.EDA import (
     descr,
     num_vizual,
     num_rela,
